@@ -1,5 +1,7 @@
 ﻿(function (window, $, undefined) {
 
+	var TOUCH = 'ontouchstart' in window || navigator.maxTouchPoints;
+
 	window.PainterComponent = function (element) {
 		var self = this;
 		this._subscriptions = {};
@@ -17,8 +19,14 @@
 
 		this._getCoords = function (e) {
 			var x, y;
-			var x = (e.offsetX || e.clientX - $(e.target).offset().left);
-			var y = (e.offsetY || e.clientY - $(e.target).offset().top);
+			if(TOUCH) {
+				x = e.originalEvent.touches[0].clientX - $(e.target).offset().left;
+				y = e.originalEvent.touches[0].clientY - $(e.target).offset().top;
+			} else {
+				x = (e.offsetX || e.clientX - $(e.target).offset().left);
+				y = (e.offsetY || e.clientY - $(e.target).offset().top);
+			}
+
 			return { x: x, y: y };
 		};
 
@@ -29,16 +37,16 @@
 			self._color = $(this).val();
 		});
 
-		$('canvas').mousedown(function (e) {
+		$('canvas').on('mousedown touchstart', function (e) {
 			started = true;
 			var coords = self._getCoords(e);
 			self._startX = coords.x;
 			self._startY = coords.y;
 		});
-		$(document.body).mouseup(function (e) {
+		$(document.body).on('mouseup touchend', function (e) {
 			started = false;
 		});
-		$('canvas').mousemove(function (e) {
+		$('canvas').on('mousemove touchmove', function (e) {
 			if (started !== true) {
 				return;
 			}
